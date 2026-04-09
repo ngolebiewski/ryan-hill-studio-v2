@@ -11,7 +11,12 @@ export default defineNuxtConfig({
     exposeConfig: true,
     viewer: true,
   },
+  routeRules: {
+    // Disable Server-Side Rendering for all admin routes
+    '/admin/**': { ssr: false },
+  },
   runtimeConfig: {
-    databaseUrl: process.env.NUXT_DATABASE_URL 
+    databaseUrl: process.env.NUXT_DATABASE_URL,
+    jwtSecret: process.env.JWT_SECRET,
   }
 })

@@ -13,6 +13,8 @@
     "@nuxthq/ui": "^2.7.0",
     "@nuxtjs/tailwindcss": "^6.14.0",
     "@pinia/nuxt": "^0.11.3",
+    "argon2": "^0.44.0",
+    "jose": "^6.2.2",
     "markdown-it": "^14.1.1",
     "nuxt": "^4.4.2",
     "pg": "^8.20.0",
