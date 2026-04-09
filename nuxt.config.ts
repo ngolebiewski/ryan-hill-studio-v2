@@ -1,13 +1,17 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   modules: [
     '@pinia/nuxt',
-    '@nuxtjs/tailwindcss',
+    '@nuxtjs/tailwindcss', // Put this back for stability
     '@nuxthq/ui'
   ],
+  // This tells Tailwind to look in the root since you aren't using /app
+  tailwindcss: {
+    exposeConfig: true,
+    viewer: true,
+  },
   runtimeConfig: {
-    databaseUrl: '' // Nuxt loads this from your .env automatically
+    databaseUrl: process.env.NUXT_DATABASE_URL 
   }
 })

@@ -1,6 +1,12 @@
-import pkg from 'pg'
-const { Pool } = pkg
+// server/utils/db.ts
+import pg from 'pg'
+const { Pool } = pg
 
-export const pool = new Pool({
-  connectionString: useRuntimeConfig().databaseUrl
+const config = useRuntimeConfig()
+
+// LOG THIS to your terminal to see where Nuxt is actually looking
+console.log('Connecting to:', config.databaseUrl)
+
+export const pool = new pg.Pool({
+  connectionString: config.databaseUrl,
 })

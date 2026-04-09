@@ -1,5 +1,5 @@
 <script setup>
-const hero = "/images/hero.jpg" // put something in /public/images
+const hero = "/images/ing.png" // put something in /public/images
 </script>
 
 <template>
