@@ -11,7 +11,8 @@ async function login() {
     console.log('🔐 [GATE] Calling /api/auth/login')
     await $fetch('/api/auth/login', {
       method: 'POST',
-      body: { email: email.value, password: password.value }
+      body: { email: email.value, password: password.value },
+      credentials: 'include'
     })
     console.log('🔐 [GATE] Login response received, redirecting to /admin')
     

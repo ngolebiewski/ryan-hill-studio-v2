@@ -12,7 +12,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
   // Call the /api/auth/me endpoint which validates the cookie
   try {
     console.log('🔐 [MIDDLEWARE] Checking auth by calling /api/auth/me')
-    const response = await $fetch('/api/auth/me')
+    const response = await $fetch('/api/auth/me', {
+      credentials: 'include'
+    })
     console.log('🔐 [MIDDLEWARE] Auth response:', response)
     // If we got a user back, auth is valid - allow access
     if (response) {
