@@ -37,7 +37,7 @@ const { data, error, pending } = await useFetch(`/api/series/${route.params.slug
         <NuxtLink
           v-for="art in data.artworks"
           :key="art.id"
-          :to="`/artworks/${art.slug}`"
+          :to="`/artwork/${art.slug}`"
           class="flex-shrink-0 snap-center"
         >
           <img

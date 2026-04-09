@@ -1,6 +1,8 @@
 # RYAN HILL STUDIO v2 / Artist Portfolio
 A high-performance, custom portfolio built with Nuxt 3 and Postgres, designed to replace a legacy WordPress setup with a modern, schema-driven architecture. No SquareSpace lockin. Hooray!
 
+![Screenshot of website](/public/images/screenshot_v0.png)
+
 ## Project Goals
 
     - Decoupled Content: Migrate away from WordPress for a more performant, tailored experience.
@@ -17,7 +19,7 @@ A high-performance, custom portfolio built with Nuxt 3 and Postgres, designed to
 
     - Database: PostgreSQL (Hosted on Neon.tech)
 
-    - ORM/Query: Straight up SQL or Drizzle ORM or Prisma
+    - ORM/Query: Straight up SQL. Onlu add in Drizzle or Prisma if necessary in admin backend build.
 
     - Styling: Tailwind CSS
 

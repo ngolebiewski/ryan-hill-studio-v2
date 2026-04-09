@@ -1,6 +1,20 @@
 <script setup>
-// Fetch the dynamic series list from our index endpoint
-const { data: series } = await useFetch('/api/series')
+// Fetch the entire series list to build the hierarchy
+const { data: allSeries } = await useFetch('/api/series')
+
+// Organize series into a tree structure: Parents vs Children
+const navTree = computed(() => {
+  if (!allSeries.value) return []
+  
+  // 1. Filter for top-level items (those with no parent_id)
+  return allSeries.value
+    .filter(s => !s.parent_id)
+    .map(parent => ({
+      ...parent,
+      // 2. Attach any series that identifies this one as its parent
+      children: allSeries.value.filter(child => child.parent_id === parent.id)
+    }))
+})
 </script>
 
 <template>
@@ -23,14 +37,28 @@ const { data: series } = await useFetch('/api/series')
       </div>
 
       <nav class="flex flex-wrap gap-x-8 gap-y-3 text-[10px] uppercase tracking-[0.25em] font-medium">
-        <NuxtLink
-          v-for="s in series || []"
-          :key="s.id"
-          :to="`/series/${s.slug}`"
-          class="nav-link"
-        >
-          {{ s.title }}
-        </NuxtLink>
+        <div v-for="item in navTree" :key="item.id" class="relative group">
+          <NuxtLink 
+            :to="`/series/${item.slug}`" 
+            class="nav-link flex items-center gap-1"
+          >
+            {{ item.title }}
+            <span v-if="item.children.length" class="text-[7px] opacity-40 transition-transform group-hover:rotate-180">▼</span>
+          </NuxtLink>
+
+          <div v-if="item.children.length" class="absolute -left-4 top-full pt-4 hidden group-hover:block z-50">
+            <div class="bg-white border border-zinc-100 p-4 min-w-[160px] flex flex-col gap-3 shadow-xl">
+              <NuxtLink
+                v-for="child in item.children"
+                :key="child.id"
+                :to="`/series/${child.slug}`"
+                class="nav-link whitespace-nowrap"
+              >
+                {{ child.title }}
+              </NuxtLink>
+            </div>
+          </div>
+        </div>
 
         <NuxtLink to="/about" class="nav-link">About / Bio</NuxtLink>
         <NuxtLink to="/cv" class="nav-link">CV</NuxtLink>
@@ -49,8 +77,8 @@ const { data: series } = await useFetch('/api/series')
   @apply hover:text-zinc-400 transition-colors duration-300;
 }
 
-/* Custom Active State: Shows a subtle dot or underline */
+/* Active link state for both static and dynamic routes */
 .router-link-active:not([href="/"]) {
-  @apply text-zinc-400;
+  @apply text-zinc-500;
 }
 </style>
