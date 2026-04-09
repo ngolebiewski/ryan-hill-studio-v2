@@ -1,9 +1,7 @@
 <script setup>
 console.log('🔐 [ADMIN INDEX] Page script loading')
-definePageMeta({ middleware: 'admin' })
-
-// No need to fetch auth here - server middleware already verified it
-// Just make sure the middleware is protecting this route
+// Server middleware (server/middleware/admin-auth.ts) already protects this route
+// No need for definePageMeta middleware - just render the page
 console.log('🔐 [ADMIN INDEX] Page rendered successfully')
 
 async function logout() {

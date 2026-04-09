@@ -1,6 +1,5 @@
 <script setup>
-definePageMeta({ middleware: 'admin' })
-
+// Server middleware (server/middleware/admin-auth.ts) protects this route
 const { data: series, refresh } = await useFetch('/api/series')
 
 const updateOrder = async (id, newOrder) => {

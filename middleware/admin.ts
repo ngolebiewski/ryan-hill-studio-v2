@@ -1,28 +1,13 @@
 // middleware/admin.ts
-// NOTE: Server middleware (server/middleware/admin-auth.ts) handles ALL auth protection
-// This client middleware is kept for UX during client-side navigation only
-// It runs AFTER hydration during route changes
+// NOTE: Server middleware (server/middleware/admin-auth.ts) is the primary auth guard
+// This is kept as a safety net for logging only - no redirects
+// (Redirects during hydration were causing the flickering issue)
 
-export default defineNuxtRouteMiddleware(async (to) => {
-  // Only run on client side, not during SSR
+export default defineNuxtRouteMiddleware((to) => {
   if (process.server) return
-
-  console.log('🔐 [CLIENT MIDDLEWARE] Route change detected:', to.path)
   
-  // Skip check on login page
-  if (to.path === '/admin/gate') {
-    console.log('🔐 [CLIENT MIDDLEWARE] Gate page - allowing access')
-    return
-  }
-
-  // For admin routes, verify token exists in cookie (lightweight client-side check)
+  console.log('🔐 [CLIENT MIDDLEWARE] Route:', to.path)
   const token = useCookie('admin_token')
-  console.log('🔐 [CLIENT MIDDLEWARE] Token in cookie:', token.value ? 'YES' : 'NO')
-  
-  if (!token.value) {
-    console.log('🔐 [CLIENT MIDDLEWARE] No token - redirecting to /admin/gate')
-    return navigateTo('/admin/gate')
-  }
-
-  console.log('🔐 [CLIENT MIDDLEWARE] Token found - allowing access')
+  console.log('🔐 [CLIENT MIDDLEWARE] Token exists:', !!token.value)
+  // Don't redirect here - let server handle it on next full page load
 })
