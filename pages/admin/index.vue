@@ -1,11 +1,15 @@
 <script setup>
+console.log('🔐 [ADMIN INDEX] Page script loading')
 definePageMeta({ middleware: 'admin' })
 
 // Fetch auth status from the server
 // This works during SSR and on client, preventing hydration issues
-const { data: user } = await useFetch('/api/auth/me')
+console.log('🔐 [ADMIN INDEX] Calling useFetch for /api/auth/me')
+const { data: user, error, pending } = await useFetch('/api/auth/me')
+console.log('🔐 [ADMIN INDEX] useFetch complete', { user: user.value, error: error.value, pending: pending.value })
 
 async function logout() {
+  console.log('🔐 [ADMIN INDEX] Logout clicked')
   await $fetch('/api/auth/logout', { method: 'POST' })
   window.location.href = '/admin/gate'
 }
