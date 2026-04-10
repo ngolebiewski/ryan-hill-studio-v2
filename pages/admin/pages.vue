@@ -92,9 +92,18 @@ const handleSave = async () => {
 <template>
   <div class="max-w-6xl mx-auto py-12 px-6 grid grid-cols-4 gap-12">
     <aside class="col-span-1 border-r border-zinc-100 pr-6">
+      
+      <NuxtLink 
+        to="/admin" 
+        class="inline-flex items-center text-[10px] uppercase tracking-[0.2em] text-zinc-400 hover:text-black mb-12 transition-colors group"
+      >
+        <span class="mr-2 transition-transform group-hover:-translate-x-1">←</span> 
+        Dashboard
+      </NuxtLink>
+
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-[10px] uppercase tracking-widest text-zinc-400">Site Pages</h2>
-        <button @click="createPage" class="text-[10px] text-zinc-400 hover:text-black font-bold">+</button>
+        <button @click="createPage" class="text-[14px] text-zinc-400 hover:text-black leading-none transition-colors">+</button>
       </div>
       
       <ul class="space-y-4">
