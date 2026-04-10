@@ -35,6 +35,9 @@ CREATE TABLE pages (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
+ALTER TABLE artworks ADD COLUMN alt_text TEXT;
+ALTER TABLE artworks ADD COLUMN medium TEXT;
+
 --SEED
 
 INSERT INTO series (title, slug)

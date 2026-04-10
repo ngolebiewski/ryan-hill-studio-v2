@@ -22,7 +22,7 @@ const navTree = computed(() => {
     <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-sm px-6 py-8 md:px-12 flex flex-col md:flex-row items-baseline justify-between gap-6">
       <div class="flex items-center gap-4">
         <NuxtLink to="/" class="text-xl font-light tracking-[0.2em] uppercase">
-          Ryan Hill STUDIO
+          Ryan Hill Studio
         </NuxtLink>
         
         <a 

@@ -42,7 +42,7 @@ A high-performance, custom portfolio built with Nuxt 3 and Postgres, designed to
 
     [ ] Build "Add Artwork" and "Add Series" forms using Nuxt Server Actions.
 
-    [ ] Create the CV/Bio editor (storing content in a pages table).
+    [ ] Create the CV/Bio editor (storing content in a pages table). Use https://github.com/Ionaru/easy-markdown-editor
 
 ### Phase 3: Deployment
 
