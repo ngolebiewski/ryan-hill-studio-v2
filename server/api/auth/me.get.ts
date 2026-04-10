@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
     await checkAuth(event)
     console.log('🔐 [/api/auth/me] Auth check passed, returning user:', event.context.user.email)
     return event.context.user // Return the decrypted JWT payload (id, email, etc.)
-  } catch (e) {
+  } catch (e: any) {
     console.log('🔐 [/api/auth/me] Auth check failed:', e.message)
     return null // Not logged in
   }
