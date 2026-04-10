@@ -28,15 +28,6 @@ export default defineEventHandler(async (event) => {
   console.log('🔐 [LOGIN] Token created:', token.substring(0, 20) + '...')
 
   // 4. Set Cookie
-  // setCookie(event, 'admin_token', token, {
-  //     httpOnly: true, // Prevents JS access (Security)
-  //     // secure: process.env.NODE_ENV === 'production',
-  //     secure: false, // Temporary: force false for testing
-  //     sameSite: 'lax',
-  //     path: '/',      // CRITICAL: Makes cookie available to /admin and /api
-  //     maxAge: 60 * 60 * 24 // 1 day
-  // })
-  // server/api/auth/login.post.ts
   setCookie(event, "admin_token", token, {
     httpOnly: true,
     path: "/", // Matches everything from root

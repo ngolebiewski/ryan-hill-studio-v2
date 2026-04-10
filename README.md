@@ -98,6 +98,13 @@ Content Delivery
 
     Server Utilities: A centralized server/utils/db.ts handles the connection pool to ensure efficient database handshakes in a serverless environment.
 
+# INSTALL for DEVELOPMENT
+1. Clone Repo and npm install everything
+2. Use Postgres 18 and create your database. i.e. ```CREATE DATABASE ryan_hill_studio; ```
+3. Make .env file with:
+    NUXT_DATABASE_URL=postgresql://<your_name>@localhost:5432/ryan_hill_studio
+    JWT_SECRET=<some long secret>
+
 # DEV NOTES
 start up Postgres:
 `brew services start postgresql@18`
@@ -127,7 +134,6 @@ Or, if you don't want/need a background service you can just run:
 
 brew services start postgresql@18
 
-Use code with caution.
 Connect to the default database using the full path:
 bash
 
