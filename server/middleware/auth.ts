@@ -2,6 +2,8 @@
 export default defineEventHandler(async (event) => {
   const path = getRequestPath(event)
   const method = event.method // Get the HTTP method (GET, POST, etc.)
+  
+  console.log(`🔐 [API MIDDLEWARE] ${method} ${path}`)
 
   // 1. Only run on API routes
   // 2. Ignore the login route
@@ -11,6 +13,7 @@ export default defineEventHandler(async (event) => {
     !path.startsWith('/api/auth/') &&
     method !== 'GET'
   ) {
+    console.log(`🔐 [API MIDDLEWARE] Checking auth for ${method} ${path}`)
     await checkAuth(event)
   }
 })

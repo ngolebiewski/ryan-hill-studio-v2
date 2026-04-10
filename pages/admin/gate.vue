@@ -5,16 +5,21 @@ const password = ref('')
 const error = ref('')
 
 async function login() {
-    console.log('login time')
+    console.log('🔐 [GATE] Login attempt')
+    console.log('🔐 [GATE] Email:', email.value)
   try {
+    console.log('🔐 [GATE] Calling /api/auth/login')
     await $fetch('/api/auth/login', {
       method: 'POST',
-      body: { email: email.value, password: password.value }
+      body: { email: email.value, password: password.value },
+      credentials: 'include'
     })
+    console.log('🔐 [GATE] Login response received, redirecting to /admin')
     
     // Use a hard redirect to ensure the cookie is picked up by the next page load
     window.location.href = '/admin'
   } catch (err) {
+    console.log('🔐 [GATE] Login error:', err)
     error.value = 'Unauthorized'
   }
 }

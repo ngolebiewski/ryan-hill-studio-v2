@@ -61,13 +61,19 @@ export const createToken = async (user: any) => {
  * Note: GET requests are already bypassed in the middleware.
  */
 export const checkAuth = async (event: any) => {
+  console.log('🔐 [checkAuth] Starting auth check')
   // Extract token from Bearer header OR the 'admin_token' cookie
   const authHeader = getHeader(event, 'authorization')
+  console.log('🔐 [checkAuth] Authorization header:', authHeader ? 'PRESENT' : 'MISSING')
+  
   const token = authHeader?.startsWith('Bearer ') 
     ? authHeader.split(' ')[1] 
     : getCookie(event, 'admin_token')
+  console.log('🔐 [checkAuth] Token found:', token ? token.substring(0, 20) + '...' : 'NO TOKEN')
+  console.log('🔐 [checkAuth] All cookies:', event.node.req.headers.cookie || 'NO COOKIES')
 
   if (!token) {
+    console.log('🔐 [checkAuth] FAILED - No token found')
     throw createError({ 
       statusCode: 401, 
       statusMessage: 'Authentication required to modify content.' 
@@ -76,9 +82,11 @@ export const checkAuth = async (event: any) => {
 
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET)
+    console.log('🔐 [checkAuth] Token verified successfully for user:', payload.email)
     // Attach user data to the event context for use in downstream handlers
     event.context.user = payload
   } catch (err) {
+    console.log('🔐 [checkAuth] Token verification FAILED:', err.message)
     throw createError({ 
       statusCode: 401, 
       statusMessage: 'Session expired or invalid. Please log in again.' 
