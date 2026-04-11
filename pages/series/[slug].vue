@@ -1,9 +1,22 @@
 <script setup>
-const route = useRoute()
+import MarkdownIt from 'markdown-it'
 
-// We use 'data' as the key to match your template
+const route = useRoute()
+const md = new MarkdownIt()
+
 const { data, error, pending } = await useFetch(`/api/series/${route.params.slug}`, {
-  key: `series-${route.params.slug}` // Ensures unique cache per series
+  key: `series-${route.params.slug}`
+})
+
+// Sort artworks by order_index
+const sortedArtworks = computed(() => {
+  if (!data.value?.artworks) return []
+  return [...data.value.artworks].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
+})
+
+// Use markdown-it to render the series description
+const renderedDescription = computed(() => {
+  return data.value?.series?.description ? md.render(data.value.series.description) : ''
 })
 </script>
 
@@ -23,19 +36,32 @@ const { data, error, pending } = await useFetch(`/api/series/${route.params.slug
       </h1>
 
       <div class="flex flex-col gap-12 md:hidden px-4">
+        <div v-if="renderedDescription" 
+             class="series-description prose prose-zinc text-zinc-500 uppercase tracking-widest text-[10px] leading-relaxed"
+             v-html="renderedDescription">
+        </div>
+
         <NuxtLink
-          v-for="art in data.artworks"
+          v-for="art in sortedArtworks"
           :key="art.id"
-          :to="`/artworks/${art.slug}`"
+          :to="`/artwork/${art.slug}`"
         >
           <img :src="art.image_url" class="w-full h-auto" :alt="art.title" />
           <p class="mt-2 text-[10px] uppercase tracking-wider text-zinc-500">{{ art.title }}</p>
         </NuxtLink>
       </div>
 
-      <div class="hidden md:flex gap-12 overflow-x-auto pb-12 px-12 snap-x">
+      <div class="hidden md:flex gap-12 overflow-x-auto pb-12 px-12 snap-x items-center">
+        
+        <div v-if="renderedDescription" 
+             class="flex-shrink-0 snap-start w-[400px] h-[60vh] flex flex-col justify-center pr-12 border-r border-zinc-100">
+          <div class="series-description text-zinc-400 uppercase tracking-[0.2em] text-[11px] leading-loose"
+               v-html="renderedDescription">
+          </div>
+        </div>
+
         <NuxtLink
-          v-for="art in data.artworks"
+          v-for="art in sortedArtworks"
           :key="art.id"
           :to="`/artwork/${art.slug}`"
           class="flex-shrink-0 snap-center"
@@ -49,15 +75,41 @@ const { data, error, pending } = await useFetch(`/api/series/${route.params.slug
         </NuxtLink>
       </div>
     </div>
-
-    <div v-else class="p-12 border-t mt-12 text-xs font-mono text-zinc-400">
-      Data is null. Current Slug: {{ route.params.slug }}
-    </div>
   </div>
 </template>
 
 <style scoped>
-/* Hide scrollbar but keep functionality */
+/* Gallery Description Context */
+.series-description :deep(p) {
+  margin-bottom: 2rem;
+}
+
+.series-description :deep(strong) {
+  color: #18181b; /* zinc-900 */
+  font-weight: 700;
+}
+
+/* Accessible & Stylized Links */
+.series-description :deep(a) {
+  color: #3f3f46; /* zinc-700 - slightly darker than the prose for contrast */
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+  transition: all 0.2s ease;
+}
+
+.series-description :deep(a:hover) {
+  color: #000000;
+  text-decoration-thickness: 2px;
+  background-color: #f4f4f5; /* zinc-100 subtle highlight */
+}
+
+.series-description :deep(a:focus) {
+  outline: 2px solid #6366f1; /* indigo-500 for high-visibility focus */
+  outline-offset: 4px;
+}
+
+/* Standard Gallery UI bits */
 .overflow-x-auto {
   -ms-overflow-style: none;
   scrollbar-width: none;
