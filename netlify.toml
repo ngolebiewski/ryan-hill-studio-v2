@@ -1,0 +1,15 @@
+[build]
+  command = "npm run build"
+  # Let Netlify find the folder automatically
+
+[build.environment]
+  # CRITICAL: This prevents the build from failing due to your secrets
+  SECRETS_SCAN_OMIT_KEYS = "NUXT_JWT_SECRET,NUXT_DATABASE_URL"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[headers]]
+  for = "/api/artworks/blob/*"
+  [headers.values]
+    cache-control = "public, max-age=31536000, immutable"

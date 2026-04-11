@@ -35,6 +35,14 @@ CREATE TABLE pages (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
+-- server/utils/db.ts 
+ALTER TABLE artworks 
+ADD COLUMN IF NOT EXISTS alt_text TEXT,
+ADD COLUMN IF NOT EXISTS medium TEXT;
+
+-- Ensure series_id is nullable (in case an artwork isn't in a series)
+ALTER TABLE artworks ALTER COLUMN series_id DROP NOT NULL;
+
 --SEED
 
 INSERT INTO series (title, slug)

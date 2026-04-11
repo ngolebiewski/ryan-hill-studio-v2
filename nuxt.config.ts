@@ -12,8 +12,8 @@ export default defineNuxtConfig({
     viewer: true,
   },
   runtimeConfig: {
-    databaseUrl: process.env.NUXT_DATABASE_URL,
-    jwtSecret: process.env.JWT_SECRET,
+    databaseUrl: '',
+    jwtSecret: '',  
   },
   ssr: true // Enable SSR for proper auth hydration
 })

@@ -1,4 +1,5 @@
 // server/api/pages/[slug].ts
+import { pool } from '~/server/utils/db' // <
 
 export default defineEventHandler(async (event) => {
   const slug = getRouterParam(event, 'slug')
