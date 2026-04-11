@@ -5,11 +5,11 @@ A high-performance, custom portfolio built with Nuxt 3 and Postgres, designed to
 
 # INSTALL for DEVELOPMENT
 1. Clone Repo and npm install everything
-2. Use Postgres 18 and create your database. i.e. ```CREATE DATABASE ryan_hill_studio; ```
+2. Use Postgres 18 and create your database. i.e. `CREATE DATABASE ryan_hill_studio; `
 3. Make .env file with:
     NUXT_DATABASE_URL=postgresql://<your_name>@localhost:5432/ryan_hill_studio
     JWT_SECRET=<some long secret>
-4. Note: run with `netlify dev` to emulate BLOB storage
+4. Note: run with `netlify dev` to emulate BLOB storage locally. otherwise `npm run dev`
 
 
 ## Project Goals

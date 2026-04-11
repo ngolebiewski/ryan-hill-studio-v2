@@ -1,3 +1,4 @@
+// server/api/artworks/blob/[name].get.ts
 import { getStore } from '@netlify/blobs'
 
 export default defineEventHandler(async (event) => {
@@ -11,8 +12,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Image not found' })
   }
 
-  // Set the correct content type if you want (optional, but good practice)
-  // setResponseHeader(event, 'Content-Type', 'image/jpeg')
+  // Optional: Set long-term caching for better performance
+  setResponseHeader(event, 'Cache-Control', 'public, max-age=31536000, immutable')
   
   return blob
 })

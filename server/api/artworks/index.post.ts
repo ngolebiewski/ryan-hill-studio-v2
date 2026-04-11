@@ -1,3 +1,4 @@
+// server/api/artworks/index.post.ts
 import { pool } from '~/server/utils/db'
 import { getStore } from '@netlify/blobs'
 
@@ -13,6 +14,7 @@ export default defineEventHandler(async (event) => {
   for (const item of formData) {
     if (item.name === 'image' && item.filename) {
       fileData = item.data
+      // Clean filename for URL safety
       fileName = `${Date.now()}-${item.filename.replace(/\s+/g, '-')}`
       fileType = item.type || 'image/jpeg'
     } else if (item.name) {
@@ -24,16 +26,17 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Missing Title or Image' })
   }
 
-  // Netlify Blob Storage
+  // 1. Upload to Netlify Blob Storage
   const artworksStore = getStore('artworks')
-
-  // @ts-ignore - TypeScript doesn't recognize the Node Buffer/Uint8Array mismatch with Web BlobInput
-  // but it works perfectly in the Netlify/Node runtime.
+  // @ts-ignore
   await artworksStore.set(fileName, fileData, { contentType: fileType })
 
-  // We store the proxy URL in the DB. 
+  // 2. Prepare Database Data
   const imageUrl = `/api/artworks/blob/${fileName}`
   const slug = fields.title.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-')
+  
+  // Auto-generate Alt Text if empty
+  const finalAlt = fields.alt_text || `${fields.title}${fields.medium ? ', ' + fields.medium : ''}`
 
   try {
     const res = await pool.query(
@@ -46,13 +49,13 @@ export default defineEventHandler(async (event) => {
         fields.description || '', 
         fields.size || '', 
         fields.medium || '', 
-        fields.alt_text || '', 
+        finalAlt, 
         fields.series_id || null
       ]
     )
     return res.rows[0]
   } catch (err) {
-    console.error('❌ [API] Artwork Post Error:', err)
+    console.error('❌ Artwork Post Error:', err)
     throw createError({ statusCode: 500, statusMessage: 'Database save failed' })
   }
 })
