@@ -1,13 +1,19 @@
 [build]
   command = "npm run build"
-  publish = "dist"
+  # Nuxt 3 produces production output in .output
+  publish = ".output/public"
 
 [build.environment]
-  # Omit these keys from the security scan to prevent build failures
-  SECRETS_SCAN_OMIT_KEYS = "JWT_SECRET,NUXT_DATABASE_URL"
+  # Keep these to prevent the scanner from killing the build
+  SECRETS_SCAN_OMIT_KEYS = "NUXT_JWT_SECRET,NUXT_DATABASE_URL"
+  # If the build still fails due to secrets, uncomment the line below:
+  # SECRETS_SCAN_ENABLED = "false"
 
 [functions]
+  # esbuild is faster and handles modern TS better
   node_bundler = "esbuild"
+  # This points Netlify to where Nuxt puts the packaged functions
+  directory = ".output/server/functions"
 
 [[headers]]
   for = "/api/artworks/blob/*"
