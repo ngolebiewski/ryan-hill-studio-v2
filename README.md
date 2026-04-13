@@ -2,10 +2,13 @@
 A high-performance, custom portfolio built with Nuxt 3 and Postgres, designed to replace a legacy WordPress setup with a modern, schema-driven architecture. No SquareSpace lockin. Hooray!
 
 ![Screenshot of website](/public/images/screenshot_v0.png)
+![Screenshot of admin tools](/public/images/admin-screenshot.jpg)
 
 # INSTALL for DEVELOPMENT
 1. Clone Repo and npm install everything
-2. Use Postgres 18 and create your database. i.e. `CREATE DATABASE ryan_hill_studio; `
+2. Use Postgres 18 and create your database.
+    - `CREATE DATABASE ryan_hill_studio; `
+    - Copy and paste or run `db/schema.sql` to create the tables and partly seed the db.
 3. Make .env file with:
     NUXT_DATABASE_URL=postgresql://<your_name>@localhost:5432/ryan_hill_studio
     JWT_SECRET=<some long secret>
