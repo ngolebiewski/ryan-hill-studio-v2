@@ -1,21 +1,22 @@
 <script setup>
 import draggable from 'vuedraggable'
 
-const route = useRoute() // Access query params
-const { data: artworks, refresh: refreshArtworks } = await useFetch('/api/artworks')
+const route = useRoute()
+
+// Fetch artworks with a unique key and cache disabled for admin accuracy
+const { data: artworks, refresh: refreshArtworks } = await useFetch('/api/artworks', {
+  key: 'admin-artwork-organizer',
+  initialCache: false
+})
 const { data: series } = await useFetch('/api/series')
 
-// Initialize selectedSeriesId from the URL query if it exists
 const selectedSeriesId = ref(route.query.seriesId ? parseInt(route.query.seriesId) : null)
-
-// Automatically enter reorder mode if we came from the series page
 const isReorderMode = ref(!!route.query.seriesId)
-
 const searchQuery = ref('')
 
 /**
  * THE SERIES SHELF (Left Side)
- * Filters artworks belonging to the selected series, sorted by order_index.
+ * Mutates the master artworks array directly to prevent "snap-back"
  */
 const seriesArtworks = computed({
   get: () => {
@@ -25,18 +26,27 @@ const seriesArtworks = computed({
       .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
   },
   set: (newList) => {
-    // When an item is dropped here, we don't save to DB yet, 
-    // but we update the local object state for the preview.
-    newList.forEach((art, index) => {
-      art.order_index = index
-      art.series_id = parseInt(selectedSeriesId.value)
+    if (!artworks.value) return
+    
+    // Create a map for quick lookup of the new order
+    const newOrderMap = new Map(newList.map((item, index) => [item.id, index]))
+
+    // Update the master list
+    artworks.value = artworks.value.map(art => {
+      if (newOrderMap.has(art.id)) {
+        return {
+          ...art,
+          series_id: parseInt(selectedSeriesId.value),
+          order_index: newOrderMap.get(art.id)
+        }
+      }
+      return art
     })
   }
 })
 
 /**
  * THE STUDIO POOL (Right Side)
- * Shows artworks that are either uncategorized OR belong to other series.
  */
 const studioPool = computed({
   get: () => {
@@ -48,44 +58,44 @@ const studioPool = computed({
     })
   },
   set: (newList) => {
-    // When dragging OUT of the series back to the pool, nullify the series_id
-    newList.forEach(art => {
-      if (art.series_id === parseInt(selectedSeriesId.value)) {
-        art.series_id = null
-        art.order_index = 0
+    if (!artworks.value) return
+    
+    // If an item is in this list, ensure it doesn't belong to the active series locally
+    const poolIds = new Set(newList.map(a => a.id))
+
+    artworks.value = artworks.value.map(art => {
+      if (poolIds.has(art.id) && art.series_id === parseInt(selectedSeriesId.value)) {
+        return { ...art, series_id: null, order_index: 0 }
       }
+      return art
     })
   }
 })
 
-/**
- * BATCH UPDATE
- * Sends the final array of IDs to server/api/series/reorder.patch.ts
- */
 const saveOrder = async () => {
   if (!selectedSeriesId.value) return
 
+  // We send the IDs in the exact order they appear in the computed 'seriesArtworks'
   const artworkIds = seriesArtworks.value.map(a => a.id)
   
   try {
-    await $fetch('/api/series/reorder', {
-      method: 'PATCH',
+    await $fetch('/api/artworks/reorder', {
+      method: 'POST', 
       body: { 
         artworkIds, 
-        seriesId: selectedSeriesId.value 
+        seriesId: parseInt(selectedSeriesId.value) 
       }
     })
     
     await refreshArtworks()
     isReorderMode.value = false
-    alert("Series organization saved.")
+    alert("Series organization saved successfully.")
   } catch (err) {
-    console.error(err)
-    alert("Failed to save reorder. check console.")
+    console.error("Save Error:", err)
+    alert("Failed to save. Check server logs.")
   }
 }
 
-// Visual helper for the placeholder
 const getSeriesTitle = () => {
   const s = series.value?.find(s => s.id === parseInt(selectedSeriesId.value))
   return s ? s.title : 'Select Series'
@@ -121,83 +131,60 @@ const getSeriesTitle = () => {
     </header>
 
     <div v-if="selectedSeriesId" class="grid grid-cols-1 lg:grid-cols-12 gap-12">
-      
       <section class="lg:col-span-5 space-y-4">
-        <div class="flex items-center justify-between">
-          <h2 class="text-[11px] uppercase tracking-[0.2em] font-bold text-zinc-400">
-            Currently In: <span class="text-black">{{ getSeriesTitle() }}</span>
-          </h2>
-          <span class="text-[9px] text-zinc-400 uppercase">{{ seriesArtworks.length }} Items</span>
-        </div>
+        <h2 class="text-[11px] uppercase tracking-[0.2em] font-bold text-zinc-400">
+          In: <span class="text-black">{{ getSeriesTitle() }}</span>
+        </h2>
 
-        <draggable 
-          v-model="seriesArtworks" 
-          group="studio-flow" 
-          item-key="id"
-          :disabled="!isReorderMode"
-          ghost-class="opacity-20"
-          class="space-y-2 min-h-[500px] bg-zinc-50 p-6 border-2 border-dashed border-zinc-100 rounded-sm"
-        >
-          <template #item="{ element }">
-            <div class="flex items-center gap-4 bg-white p-3 border border-zinc-200 shadow-sm transition-transform" 
-                 :class="isReorderMode ? 'cursor-grab active:cursor-grabbing hover:border-zinc-400' : 'opacity-80'">
-              <span v-if="isReorderMode" class="text-zinc-300 font-mono text-lg">⠿</span>
-              <img :src="element.image_url" class="w-14 h-14 object-cover grayscale" />
-              <div class="flex-1 min-w-0">
-                <p class="text-[10px] uppercase tracking-widest font-bold truncate">{{ element.title }}</p>
-                <p class="text-[9px] text-zinc-400 uppercase truncate">{{ element.medium || 'No Medium Set' }}</p>
+        <ClientOnly>
+          <draggable 
+            v-model="seriesArtworks" 
+            group="art-flow" 
+            item-key="id"
+            :disabled="!isReorderMode"
+            ghost-class="opacity-10"
+            class="space-y-2 min-h-[500px] bg-zinc-50 p-6 border-2 border-dashed border-zinc-100 rounded-sm"
+          >
+            <template #item="{ element }">
+              <div class="flex items-center gap-4 bg-white p-3 border border-zinc-200 shadow-sm" 
+                   :class="isReorderMode ? 'cursor-grab active:cursor-grabbing hover:border-zinc-400' : 'opacity-80'">
+                <span v-if="isReorderMode" class="text-zinc-300 font-mono text-lg">⠿</span>
+                <img :src="element.image_url" class="w-14 h-14 object-cover grayscale" />
+                <div class="flex-1 min-w-0">
+                  <p class="text-[10px] uppercase tracking-widest font-bold truncate">{{ element.title }}</p>
+                  <p class="text-[9px] text-zinc-400 uppercase truncate">{{ element.medium }}</p>
+                </div>
               </div>
-            </div>
-          </template>
-        </draggable>
+            </template>
+          </draggable>
+        </ClientOnly>
       </section>
 
       <section class="lg:col-span-7 space-y-4">
         <div class="flex items-center justify-between">
           <h2 class="text-[11px] uppercase tracking-[0.2em] font-bold text-zinc-400">Studio Pool</h2>
-          <div class="relative">
-            <input v-model="searchQuery" placeholder="Filter images..." 
-                   class="bg-transparent border-b border-zinc-200 text-[10px] p-1 uppercase tracking-widest focus:outline-none focus:border-black w-48" />
-          </div>
+          <input v-model="searchQuery" placeholder="Filter..." 
+                 class="bg-transparent border-b border-zinc-200 text-[10px] p-1 uppercase tracking-widest focus:outline-none focus:border-black w-32" />
         </div>
 
-        <draggable 
-          v-model="studioPool" 
-          group="studio-flow" 
-          item-key="id"
-          :disabled="!isReorderMode"
-          ghost-class="opacity-20"
-          class="grid grid-cols-3 sm:grid-cols-4 gap-3 min-h-[500px] items-start"
-        >
-          <template #item="{ element }">
-            <div class="relative aspect-square bg-zinc-200 group overflow-hidden border border-transparent" 
-                 :class="isReorderMode ? 'cursor-grab hover:border-black' : 'opacity-80'">
-              <img :src="element.image_url" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
-              
-              <div class="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 text-center">
-                <p class="text-white text-[8px] uppercase tracking-widest mb-1">{{ element.title }}</p>
-                <p v-if="element.series_id" class="text-zinc-400 text-[7px] uppercase italic">In other series</p>
+        <ClientOnly>
+          <draggable 
+            v-model="studioPool" 
+            group="art-flow" 
+            item-key="id"
+            :disabled="!isReorderMode"
+            ghost-class="opacity-10"
+            class="grid grid-cols-3 sm:grid-cols-4 gap-3 min-h-[500px]"
+          >
+            <template #item="{ element }">
+              <div class="relative aspect-square bg-zinc-200 group overflow-hidden border border-transparent" 
+                   :class="isReorderMode ? 'cursor-grab hover:border-black' : 'opacity-80'">
+                <img :src="element.image_url" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" />
               </div>
-            </div>
-          </template>
-        </draggable>
+            </template>
+          </draggable>
+        </ClientOnly>
       </section>
-
-    </div>
-
-    <div v-else class="py-32 text-center border-2 border-dashed border-zinc-100">
-      <p class="text-zinc-400 uppercase tracking-widest text-[11px]">Select a series from the menu above to begin organizing.</p>
     </div>
   </div>
 </template>
-
-<style scoped>
-/* Scoped styles for the smooth dragging feel */
-.sortable-ghost {
-  @apply bg-zinc-900 border-zinc-900;
-}
-
-.sortable-drag {
-  @apply rotate-2 scale-105 shadow-2xl z-50;
-}
-</style>
