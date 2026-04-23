@@ -43,6 +43,20 @@ ADD COLUMN IF NOT EXISTS medium TEXT;
 -- Ensure series_id is nullable (in case an artwork isn't in a series)
 ALTER TABLE artworks ALTER COLUMN series_id DROP NOT NULL;
 
+--Additions 4/23/26 Add in Year and Video options to schema
+
+-- 1. Add the new functional columns
+ALTER TABLE artworks 
+ADD COLUMN IF NOT EXISTS is_video BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS video_url TEXT,
+ADD COLUMN IF NOT EXISTS year INTEGER;
+
+-- 2. Clean up: Ensure video_url is null by default for existing images
+-- and ensure the year column is accessible for all rows.
+COMMENT ON COLUMN artworks.video_url IS 'Stores YouTube/IG embed links or paths to local/blob MP4 files';
+COMMENT ON COLUMN artworks.is_video IS 'Flag to trigger the video player UI instead of the img tag';
+
+
 --SEED
 
 INSERT INTO series (title, slug)
@@ -97,3 +111,29 @@ VALUES (
   (SELECT id FROM series WHERE slug = 'portraits' LIMIT 1),
   1
 );
+
+-- seed a video into artworks
+INSERT INTO artworks (
+  title, 
+  slug, 
+  image_url, 
+  video_url, 
+  is_video, 
+  year, 
+  series_id, 
+  order_index
+)
+VALUES (
+  'Doodle with Me - 3 (Special Guest Kev Nemelka)', 
+  'doodle-with-me-3', 
+  'https://i.ytimg.com/vi/Fm5F1-V5YMY/maxresdefault.jpg', 
+  'https://www.youtube.com/watch?v=Fm5F1-V5YMY', 
+  true, 
+  2020, 
+  (SELECT id FROM series WHERE title = 'Paintings' LIMIT 1),
+  11
+);
+
+UPDATE artworks 
+SET image_url = 'https://i.ytimg.com/vi/Fm5F1-V5YMY/hqdefault.jpg' 
+WHERE slug = 'doodle-with-me-3';
