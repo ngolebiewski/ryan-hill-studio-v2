@@ -1,3 +1,4 @@
+// server/api/artworks/[id].patch.ts
 import { pool } from '~/server/utils/db'
 import { getStore } from '@netlify/blobs'
 
@@ -5,64 +6,73 @@ export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   const formData = await readMultipartFormData(event)
   
-  if (!formData) {
-    throw createError({ statusCode: 400, statusMessage: 'No data received' })
-  }
+  if (!formData) throw createError({ statusCode: 400, statusMessage: 'No data' })
 
   const fields: Record<string, string> = {}
-  let fileData: Buffer | null = null
-  let fileName = ''
-  let fileType = ''
+  let imageFile: { data: Buffer; name: string } | null = null
+  let videoFile: { data: Buffer; name: string } | null = null
 
-  // Parse the fields and the file
+  // 1. Parse all incoming parts
   for (const item of formData) {
     if (item.name === 'image' && item.filename) {
-      fileData = item.data
-      fileName = `${Date.now()}-${item.filename.replace(/\s+/g, '-')}`
-      fileType = item.type || 'image/jpeg'
+      imageFile = { data: item.data, name: `${Date.now()}-img-${item.filename.replace(/\s+/g, '-')}` }
+    } else if (item.name === 'video_file' && item.filename) {
+      videoFile = { data: item.data, name: `${Date.now()}-vid-${item.filename.replace(/\s+/g, '-')}` }
     } else if (item.name) {
       fields[item.name] = item.data.toString()
     }
   }
 
   try {
-    // 1. If a new image was uploaded, handle the Blob storage
-    let imageUrlUpdate = ''
-    let queryParams = [
-      fields.title, 
-      fields.description, 
-      fields.size, 
-      fields.medium, 
-      fields.alt_text, 
-      fields.series_id || null, 
-      id
+    const store = getStore('artworks')
+    
+    // 2. Build the Base Query (The columns that always get updated)
+    let updateParts = [
+      'title = $1', 'description = $2', 'size = $3', 'medium = $4', 
+      'alt_text = $5', 'series_id = $6', 'year = $7', 'is_video = $8', 'video_url = $9'
     ]
 
-    if (fileData) {
-      const store = getStore('artworks')
+    let queryParams: any[] = [
+      fields.title,
+      fields.description || '',
+      fields.size || '',
+      fields.medium || '',
+      fields.alt_text || '',
+      fields.series_id ? parseInt(fields.series_id) : null,
+      fields.year ? parseInt(fields.year) : null,
+      fields.is_video === 'true',
+      fields.video_url || null
+    ]
+
+    // 3. Conditional Image Update
+    if (imageFile) {
       //@ts-ignore
-      await store.set(fileName, fileData, { contentType: fileType })
-      imageUrlUpdate = `, image_url = $8`
-      queryParams.push(`/api/artworks/blob/${fileName}`)
+      await store.set(imageFile.name, imageFile.data)
+      updateParts.push(`image_url = $${queryParams.length + 1}`)
+      queryParams.push(`/api/artworks/blob/${imageFile.name}`)
     }
 
-    // 2. Update the Database
-    const res = await pool.query(
-      `UPDATE artworks 
-       SET title = $1, 
-           description = $2, 
-           size = $3, 
-           medium = $4, 
-           alt_text = $5, 
-           series_id = $6
-           ${imageUrlUpdate}
-       WHERE id = $7 RETURNING *`,
-      queryParams
-    )
+    // 4. Conditional Video File Update (Overrides the video_url text field if present)
+    if (videoFile) {
+      //@ts-ignore
+      await store.set(videoFile.name, videoFile.data)
+      const videoUrlParamIndex = 8 // index 8 in the queryParams array corresponds to $9 (video_url)
+      queryParams[videoUrlParamIndex] = `/api/artworks/blob/${videoFile.name}`
+    }
 
+    // Push ID as the final parameter for the WHERE clause
+    queryParams.push(id)
+    const finalQuery = `
+      UPDATE artworks 
+      SET ${updateParts.join(', ')} 
+      WHERE id = $${queryParams.length} 
+      RETURNING *`
+
+    const res = await pool.query(finalQuery, queryParams)
     return res.rows[0]
+
   } catch (err) {
-    console.error('Update Error:', err)
+    console.error('❌ Patch Update Error:', err)
     throw createError({ statusCode: 500, statusMessage: 'Database update failed' })
   }
 })
