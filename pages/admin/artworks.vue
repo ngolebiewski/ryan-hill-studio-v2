@@ -122,17 +122,19 @@ const uploadArtwork = async () => {
   fd.append("image_url", newArtwork.value.image_url || "");
 
   try {
-    const url = isEditing.value ? `/api/artworks/${newArtwork.value.id}` : '/api/artworks/create'
-    const method = isEditing.value ? 'PATCH' : 'POST'
-    
+    const url = isEditing.value
+      ? `/api/artworks/${newArtwork.value.id}`
+      : "/api/artworks/create";
+    const method = isEditing.value ? "PATCH" : "POST";
+
     // Use $fetch which automatically sends cookies if credentials are enabled
-    await $fetch(url, { 
-      method, 
+    await $fetch(url, {
+      method,
       body: fd,
-      credentials: 'include'  // <-- Add this line
-    })
-    await refresh()
-    resetForm()
+      credentials: "include", // <-- Add this line
+    });
+    await refresh();
+    resetForm();
   } catch (err) {
     console.error("Upload failed:", err);
     alert("Upload failed. Check terminal for server logs.");
@@ -353,18 +355,6 @@ const deleteArtwork = async (id) => {
         >
           <!-- <img :src="art.image_url" :alt="art.alt_text" class="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-500" /> -->
           <NuxtImg
-            v-if="art.image_url.includes('/api/artworks/blob/')"
-            :src="art.image_url.replace('/api/artworks/blob/', '')"
-            provider="netlify"
-            width="200"
-            height="200"
-            format="webp"
-            quality="60"
-            :alt="art.alt_text"
-            class="object-cover w-full h-full grayscale hover:grayscale-0"
-          />
-          <NuxtImg
-            v-else
             :src="art.image_url"
             width="200"
             height="200"

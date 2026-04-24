@@ -20,15 +20,7 @@ export default defineNuxtConfig({
       "ryanhill.studio",
       "img.youtube.com", // YouTube thumbnails
       "**", // Catch-all for any other external URLs
-    ],
-    providers: {
-      netlify: {
-        baseURL:
-          process.env.NODE_ENV === "production"
-            ? "https://ryanhill.studio/api/artworks/blob"
-            : "https://ryanhillstudiov2.netlify.app/api/artworks/blob",
-      },
-    },
+    ]
   },
   runtimeConfig: {
     databaseUrl: "",
