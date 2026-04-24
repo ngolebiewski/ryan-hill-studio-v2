@@ -5,24 +5,6 @@ const route = useRoute()
 const md = new MarkdownIt()
 const activeVideoId = ref(null) 
 
-// --- AUDIO FIX: Track screen size so we don't render two autoplaying iframes ---
-const isMobileState = ref(false)
-const updateBreakpoint = () => {
-  if (process.client) {
-    isMobileState.value = window.innerWidth < 768 // Tailwind 'md' breakpoint
-  }
-}
-
-onMounted(() => {
-  updateBreakpoint()
-  window.addEventListener('resize', updateBreakpoint)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', updateBreakpoint)
-})
-// --- END AUDIO FIX ---
-
 const { data, error, pending } = await useFetch(`/api/series/${route.params.slug}`, {
   key: `series-${route.params.slug}`
 })
@@ -55,91 +37,54 @@ useHead({
 
 <template>
   <div class="py-4">
-    <div v-if="pending" class="p-12 text-xs uppercase tracking-widest animate-pulse">
-      Loading...
-    </div>
-
-    <div v-else-if="error" class="p-12 text-red-500">
-      Error loading series
-    </div>
+    <div v-if="pending" class="p-12 text-xs uppercase tracking-widest animate-pulse">Loading...</div>
+    <div v-else-if="error" class="p-12 text-red-500">Error loading series</div>
 
     <div v-else-if="data" class="space-y-12">
-      <h1 class="text-xl font-light tracking-[0.2em] uppercase px-4">
-        {{ data.series?.title }}
-      </h1>
+      <h1 class="text-xl font-light tracking-[0.2em] uppercase px-4">{{ data.series?.title }}</h1>
 
-      <div class="flex flex-col gap-16 md:hidden px-4">
+      <div class="flex flex-col md:flex-row gap-12 md:overflow-x-auto pb-12 px-4 md:px-12 items-center md:snap-x">
+        
         <div v-if="renderedDescription" 
-             class="series-description prose prose-zinc text-zinc-500 uppercase tracking-widest text-[10px] leading-relaxed"
-             v-html="renderedDescription">
-        </div>
-
-        <div v-for="art in sortedArtworks" :key="'mob-' + art.id" class="space-y-4">
-          <div class="relative bg-zinc-50 overflow-hidden">
-            <template v-if="activeVideoId === art.id && isMobileState">
-              <div class="aspect-video w-full bg-black">
-                <iframe 
-                  v-if="art.video_url?.includes('youtube') || art.video_url?.includes('youtu.be')"
-                  :src="getEmbedUrl(art.video_url)"
-                  class="w-full h-full border-0"
-                  allow="autoplay; encrypted-media"
-                  allowfullscreen
-                ></iframe>
-                <video v-else :src="art.video_url" controls autoplay class="w-full h-auto"></video>
-              </div>
-              <button @click="togglePlay(null)" class="w-full bg-zinc-100 text-[8px] uppercase tracking-widest py-2">Close Video ×</button>
-            </template>
-
-            <template v-else>
-              <img :src="art.image_url" class="w-full h-auto" :alt="art.title" />
-              <div v-if="art.is_video" @click="togglePlay(art.id)" class="absolute inset-0 flex items-center justify-center cursor-pointer">
-                 <div class="w-14 h-14 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center border border-zinc-200 shadow-lg">
-                   <svg viewBox="0 0 24 24" class="w-5 h-5 ml-1 fill-black"><path d="M8 5v14l11-7z" /></svg>
-                 </div>
-              </div>
-            </template>
-          </div>
-          <NuxtLink :to="`/artwork/${art.slug}`" class="block">
-            <p class="text-[10px] uppercase tracking-widest text-zinc-400">
-              {{ art.title }} <span v-if="art.year" class="opacity-50">({{ art.year }})</span>
-            </p>
-          </NuxtLink>
-        </div>
-      </div>
-
-      <div class="hidden md:flex gap-12 overflow-x-auto pb-12 px-12 snap-x items-center">
-        <div v-if="renderedDescription" 
-             class="flex-shrink-0 snap-start w-[400px] h-[60vh] flex flex-col justify-center pr-12 border-r border-zinc-100">
-          <div class="series-description text-zinc-400 uppercase tracking-[0.2em] text-[11px] leading-loose"
+             class="flex-shrink-0 md:snap-start w-full md:w-[400px] md:h-[60vh] flex flex-col justify-center md:pr-12 md:border-r border-zinc-100 mb-12 md:mb-0">
+          <div class="series-description prose prose-zinc text-zinc-500 uppercase tracking-widest text-[10px] md:text-[11px] leading-relaxed"
                v-html="renderedDescription">
           </div>
         </div>
 
-        <div v-for="art in sortedArtworks" :key="'desk-' + art.id" class="flex-shrink-0 snap-center relative group">
-          <div class="relative h-[75vh] flex items-center bg-zinc-50 overflow-hidden">
-            <template v-if="activeVideoId === art.id && !isMobileState">
-              <div class="h-full aspect-video bg-black flex items-center justify-center">
-                <iframe 
-                  v-if="art.video_url?.includes('youtube') || art.video_url?.includes('youtu.be')"
-                  :src="getEmbedUrl(art.video_url)"
-                  class="h-full w-full border-0"
-                  allow="autoplay; encrypted-media"
-                  allowfullscreen
-                ></iframe>
-                <video v-else :src="art.video_url" controls autoplay class="h-full w-auto object-contain"></video>
-              </div>
-              <button @click="togglePlay(null)" class="absolute top-4 right-4 z-20 bg-black text-white p-2 text-[8px] uppercase tracking-tighter">Close ×</button>
-            </template>
+        <div v-for="art in sortedArtworks" :key="art.id" 
+             class="flex-shrink-0 md:snap-center w-full md:w-auto relative group mb-16 md:mb-0">
+          
+          <div class="relative w-full md:h-[75vh] flex items-center bg-zinc-50 overflow-hidden">
+            
+            <div v-if="activeVideoId === art.id" class="w-full h-full aspect-video md:aspect-auto bg-black flex items-center justify-center min-w-[300px]">
+              <iframe 
+                v-if="art.video_url?.includes('youtube') || art.video_url?.includes('youtu.be')"
+                :src="getEmbedUrl(art.video_url)"
+                class="w-full h-full border-0"
+                allow="autoplay; encrypted-media"
+                allowfullscreen
+              ></iframe>
+              <video v-else :src="art.video_url" controls autoplay class="w-full h-full object-contain"></video>
+              <button @click="togglePlay(null)" class="absolute top-2 right-2 z-30 bg-black text-white p-2 text-[8px] uppercase">Close ×</button>
+            </div>
 
-            <template v-else>
-              <img :src="art.image_url" class="h-full w-auto object-contain" :alt="art.title" />
-              <div v-if="art.is_video" @click="togglePlay(art.id)" class="absolute inset-0 flex items-center justify-center cursor-pointer group-hover:bg-black/5 transition-colors">
-                 <div class="w-16 h-16 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center border border-zinc-200 shadow-xl hover:scale-110 transition-transform">
-                   <svg viewBox="0 0 24 24" class="w-6 h-6 ml-1 fill-current text-black"><path d="M8 5v14l11-7z" /></svg>
-                 </div>
-              </div>
-            </template>
+            <div v-else class="relative w-full h-full flex items-center">
+              <NuxtLink v-if="!art.is_video" :to="`/artwork/${art.slug}`" class="w-full h-full block">
+                <img :src="art.image_url" class="w-full md:h-full md:w-auto object-contain cursor-pointer" :alt="art.title" />
+              </NuxtLink>
+
+              <template v-else>
+                <img :src="art.image_url" class="w-full md:h-full md:w-auto object-contain" :alt="art.title" />
+                <div @click="togglePlay(art.id)" class="absolute inset-0 flex items-center justify-center cursor-pointer group-hover:bg-black/5 transition-colors">
+                   <div class="w-14 h-14 md:w-16 md:h-16 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center border border-zinc-200 shadow-xl hover:scale-110 transition-transform">
+                     <svg viewBox="0 0 24 24" class="w-6 h-6 ml-1 fill-current text-black"><path d="M8 5v14l11-7z" /></svg>
+                   </div>
+                </div>
+              </template>
+            </div>
           </div>
+
           <NuxtLink :to="`/artwork/${art.slug}`" class="block mt-4 hover:text-black transition-colors">
             <p class="text-[10px] uppercase tracking-widest text-zinc-400">
               {{ art.title }} <span v-if="art.year" class="opacity-50">({{ art.year }})</span>
@@ -153,7 +98,6 @@ useHead({
 
 <style scoped>
 .series-description :deep(p) { margin-bottom: 2rem; }
-.series-description :deep(strong) { color: #18181b; font-weight: 700; }
-.overflow-x-auto { -ms-overflow-style: none; scrollbar-width: none; }
-.overflow-x-auto::-webkit-scrollbar { display: none; }
+.md\:overflow-x-auto { -ms-overflow-style: none; scrollbar-width: none; }
+.md\:overflow-x-auto::-webkit-scrollbar { display: none; }
 </style>

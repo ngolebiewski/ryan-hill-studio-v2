@@ -16,11 +16,44 @@ const newArtwork = ref({
   alt_text: "",
   is_video: false,
   video_url: "",
-  image_url: "", // Track the path/URL
+  image_url: "",
 });
 
 const fileInput = ref(null);
 const videoFileInput = ref(null);
+
+// --- NEW YOUTUBE AUTO-DETECTION LOGIC ---
+watch(
+  () => newArtwork.value.video_url,
+  async (newUrl) => {
+    if (!newUrl || !newArtwork.value.is_video) return;
+
+    // 1. Extract ID (handles watch?v=, youtu.be/, and ?si= tracking)
+    const regExp =
+      /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = newUrl.match(regExp);
+    const videoId = match && match[2].length === 11 ? match[2] : null;
+
+    if (videoId) {
+      // 2. Set the standard quality thumbnail automatically
+      newArtwork.value.image_url = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+
+      // 3. Try to fetch the video title via YouTube's public oEmbed
+      // This helps bypass the "missing title" error automatically
+      try {
+        const oEmbed = await $fetch(
+          `https://www.youtube.com/oembed?url=${encodeURIComponent(newUrl)}&format=json`,
+        );
+        if (oEmbed && oEmbed.title && !newArtwork.value.title) {
+          newArtwork.value.title = oEmbed.title;
+        }
+      } catch (e) {
+        console.warn("Could not auto-fetch YouTube title.");
+      }
+    }
+  },
+);
+// --- END AUTO-DETECTION ---
 
 const filteredArtworks = computed(() => {
   if (!artworks.value) return [];
@@ -64,7 +97,7 @@ const resetForm = () => {
 };
 
 const uploadArtwork = async () => {
-  // Guard: Title is required. Image is required via File OR existing URL for new entries.
+  // Now passes if we have an auto-generated image_url from YouTube
   const hasImage = fileInput.value?.files[0] || newArtwork.value.image_url;
   if (!newArtwork.value.title || (!isEditing.value && !hasImage)) {
     alert("Please provide a title and an image.");
@@ -89,13 +122,17 @@ const uploadArtwork = async () => {
   fd.append("image_url", newArtwork.value.image_url || "");
 
   try {
-    const url = isEditing.value
-      ? `/api/artworks/${newArtwork.value.id}`
-      : "/api/artworks";
-    const method = isEditing.value ? "PATCH" : "POST";
-    await $fetch(url, { method, body: fd });
-    await refresh();
-    resetForm();
+    const url = isEditing.value ? `/api/artworks/${newArtwork.value.id}` : '/api/artworks/create'
+    const method = isEditing.value ? 'PATCH' : 'POST'
+    
+    // Use $fetch which automatically sends cookies if credentials are enabled
+    await $fetch(url, { 
+      method, 
+      body: fd,
+      credentials: 'include'  // <-- Add this line
+    })
+    await refresh()
+    resetForm()
   } catch (err) {
     console.error("Upload failed:", err);
     alert("Upload failed. Check terminal for server logs.");
@@ -152,8 +189,24 @@ const deleteArtwork = async (id) => {
             <label
               class="text-[9px] uppercase tracking-widest text-zinc-500 block mb-1"
             >
-              Upload Thumbnail {{ isEditing ? "(Optional)" : "" }}
+              Thumbnail Image
             </label>
+
+            <div
+              v-if="newArtwork.image_url"
+              class="mb-2 relative aspect-video bg-black overflow-hidden border border-zinc-200"
+            >
+              <img
+                :src="newArtwork.image_url"
+                class="w-full h-full object-cover opacity-80"
+              />
+              <div
+                class="absolute bottom-1 right-1 bg-black/50 text-[7px] text-white px-1 uppercase tracking-tighter"
+              >
+                Current Source
+              </div>
+            </div>
+
             <input
               type="file"
               ref="fileInput"
@@ -163,7 +216,7 @@ const deleteArtwork = async (id) => {
             <div class="bg-zinc-200/50 p-2 rounded">
               <label
                 class="text-[8px] uppercase tracking-widest text-zinc-400 block mb-1"
-                >Image Path Reference</label
+                >Image Path / URL</label
               >
               <input
                 v-model="newArtwork.image_url"
@@ -222,6 +275,9 @@ const deleteArtwork = async (id) => {
                   placeholder="https://..."
                   class="w-full border-b p-1 text-xs focus:outline-none"
                 />
+                <p class="text-[7px] text-zinc-400 mt-1 uppercase italic">
+                  Paste link to auto-fill title & thumb
+                </p>
               </div>
               <div class="text-[8px] text-center text-zinc-300 italic">OR</div>
               <div>

@@ -1,4 +1,4 @@
-// server/api/series/reorder.patch.ts
+// server/api/series/reorder.post.ts
 import { pool } from '~/server/utils/db'
 
 export default defineEventHandler(async (event) => {
