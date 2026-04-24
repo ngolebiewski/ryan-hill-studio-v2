@@ -1,9 +1,13 @@
 // server/api/artworks/[slug].get.ts
-import { pool } from '~/server/utils/db'
+import { pool } from "~/server/utils/db";
 
 export default defineEventHandler(async (event) => {
   // Option A: Standard Nuxt way
-  let slug = getRouterParam(event, 'slug')
+  let slug = getRouterParam(event, "slug");
+
+  // if (!slug) {
+  //   throw createError({ statusCode: 400, statusMessage: "Slug is required" });
+  // }
 
   // Option B: Fallback if Option A is undefined (manual parse)
   if (!slug) {
@@ -12,10 +16,10 @@ export default defineEventHandler(async (event) => {
     slug = urlParts[urlParts.length - 1].split('?')[0]
   }
 
-  console.log('Final extracted slug:', slug)
+  console.log("Final extracted slug:", slug);
 
-  if (!slug || slug === 'artworks') {
-     throw createError({ statusCode: 400, statusMessage: 'Could not parse slug' })
+  if (!slug) {
+    throw createError({ statusCode: 400, statusMessage: "Slug is required" });
   }
 
   try {
@@ -24,24 +28,24 @@ export default defineEventHandler(async (event) => {
        FROM artworks a
        LEFT JOIN series s ON a.series_id = s.id
        WHERE a.slug = $1 LIMIT 1`,
-      [slug]
-    )
+      [slug],
+    );
 
-    const artwork = result.rows[0]
+    const artwork = result.rows[0];
 
     if (!artwork) {
       throw createError({
         statusCode: 404,
-        statusMessage: `Artwork "${slug}" not found in database`
-      })
+        statusMessage: `Artwork "${slug}" not found in database`,
+      });
     }
 
-    return artwork
+    return artwork;
   } catch (error: any) {
-    console.error('Database error:', error)
+    console.error("Database error:", error);
     throw createError({
       statusCode: 500,
-      statusMessage: error.message || 'Internal Server Error'
-    })
+      statusMessage: error.message || "Internal Server Error",
+    });
   }
-})
+});

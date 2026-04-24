@@ -1,4 +1,4 @@
-// server/api/pages/[slug].ts
+// server/api/pages/[slug].get.ts
 import { pool } from '~/server/utils/db' // <
 
 export default defineEventHandler(async (event) => {
