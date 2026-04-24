@@ -1,9 +1,6 @@
 [build]
   command = "npm run build"
-  # Let Netlify find the folder automatically
-
 [build.environment]
-  # CRITICAL: This prevents the build from failing due to your secrets
   SECRETS_SCAN_OMIT_KEYS = "NUXT_JWT_SECRET,NUXT_DATABASE_URL"
 
 [functions]
@@ -13,3 +10,19 @@
   for = "/api/artworks/blob/*"
   [headers.values]
     cache-control = "public, max-age=31536000, immutable"
+
+# Image optimization config for Netlify
+[[images.remote_patterns]]
+protocol = "https"
+hostname = "img.youtube.com"
+pathname = "/**"
+
+[[images.remote_patterns]]
+protocol = "https"
+hostname = "ryanhillstudiov2.netlify.app"
+pathname = "/**"
+
+[[images.remote_patterns]]
+protocol = "https"
+hostname = "ryanhill.studio"
+pathname = "/**"
