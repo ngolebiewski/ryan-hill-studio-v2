@@ -26,3 +26,10 @@ pathname = "/**"
 protocol = "https"
 hostname = "ryanhill.studio"
 pathname = "/**"
+
+
+# Image optimization - allow all HTTPS external images
+[[images.remote_patterns]]
+protocol = "https"
+hostname = "**"
+pathname = "/**"
