@@ -6,7 +6,7 @@ const hero = "/images/ing.png" // put something in /public/images
   <div class="h-[calc(100vh-64px)] flex items-center justify-center">
     <img
       :src="hero"
-      alt="fullscreen artwork introducing Ryan Hill Studio, drawn text reads ING"
+      alt="Drawing of a spiderweb and the letters ING"
       class="max-h-full max-w-full object-contain"
     />
   </div>
