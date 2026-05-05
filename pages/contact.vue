@@ -6,6 +6,10 @@ const { data: page } = await useFetch('/api/pages/contact')
 const renderedContent = computed(() => {
   return page.value ? md.render(page.value.content_markdown) : ''
 })
+
+useHead({
+  title: 'Contact | Ryan Hill Studio'
+})
 </script>
 
 <template>

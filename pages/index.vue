@@ -1,5 +1,10 @@
 <script setup>
-const hero = "/images/ing.png" // put something in /public/images
+const hero = "/images/ing.png"; // put in /public/images
+
+useHead({
+  title: "Ryan Hill Studio",
+});
+
 </script>
 
 <template>

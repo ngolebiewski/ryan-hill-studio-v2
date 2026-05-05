@@ -31,7 +31,7 @@ const togglePlay = (id) => {
 }
 
 useHead({
-  title: computed(() => data.value?.series?.title ? `${data.value.series.title} | Studio` : 'Series'),
+  title: computed(() => data.value?.series?.title ? `${data.value.series.title} | Ryan Hill Studio` : 'Series'),
 })
 </script>
 

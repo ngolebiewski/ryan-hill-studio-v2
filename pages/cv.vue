@@ -6,6 +6,10 @@ const { data: page } = await useFetch('/api/pages/cv')
 const renderedContent = computed(() => {
   return page.value ? md.render(page.value.content_markdown) : ''
 })
+
+useHead({
+  title: 'CV | Ryan Hill Studio'
+})
 </script>
 
 <template>
