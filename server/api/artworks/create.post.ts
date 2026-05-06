@@ -1,6 +1,43 @@
 import { pool } from '~/server/utils/db'
 import { getStore } from '@netlify/blobs'
 
+// Helper function to generate unique slug
+async function generateUniqueSlug(baseSlug: string): Promise<string> {
+  try {
+    // Fetch all slugs matching the base pattern in ONE query
+    const result = await pool.query(
+      `SELECT slug FROM artworks 
+       WHERE slug = $1 OR slug LIKE $2 
+       ORDER BY slug DESC`,
+      [baseSlug, `${baseSlug}\\_%`]
+    )
+    
+    if (result.rows.length === 0) {
+      return baseSlug // No duplicates exist
+    }
+
+    // Parse existing slugs to find highest counter
+    let maxCounter = 0
+    for (const row of result.rows) {
+      const match = row.slug.match(/_(\d{2})$/)
+      if (match) {
+        maxCounter = Math.max(maxCounter, parseInt(match[1]))
+      }
+    }
+
+    // Generate next counter
+    const nextCounter = maxCounter + 1
+    if (nextCounter > 99) {
+      throw createError({ statusCode: 400, statusMessage: 'Unable to generate unique slug (too many duplicates)' })
+    }
+
+    return `${baseSlug}_${String(nextCounter).padStart(2, '0')}`
+  } catch (err) {
+    console.error('Error checking slug uniqueness:', err)
+    throw err
+  }
+}
+
 export default defineEventHandler(async (event) => {
   const formData = await readMultipartFormData(event)
   if (!formData) throw createError({ statusCode: 400, statusMessage: 'No data' })
@@ -56,7 +93,8 @@ export default defineEventHandler(async (event) => {
     }
 
     // 5. Preparation & DB Insert
-    const slug = fields.title.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-')
+    const baseSlug = fields.title.toLowerCase().replace(/[^\w ]+/g, '').replace(/ +/g, '-')
+    const slug = await generateUniqueSlug(baseSlug)
     const isVideo = fields.is_video === 'true' || !!videoFile || (fields.video_url?.includes('youtube'))
     const finalAlt = fields.alt_text || `${fields.title}${fields.medium ? ', ' + fields.medium : ''}`
 
