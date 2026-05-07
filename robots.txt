@@ -1,0 +1,47 @@
+# =========================
+# SEO CRAWLERS (ALLOW)
+# =========================
+
+User-agent: Googlebot
+Disallow:
+
+User-agent: Bingbot
+Disallow:
+
+User-agent: DuckDuckBot
+Disallow:
+
+User-agent: Slurp
+Disallow:
+
+
+# =========================
+# AI TRAINING / SCRAPING BOTS (BLOCK)
+# =========================
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+
+# =========================
+# GENERAL RULES
+# =========================
+
+User-agent: *
+Disallow: /api/
+
+
+# =========================
+# SITEMAP
+# =========================
+
+Sitemap: https://ryanhill.studio/sitemap.xml
