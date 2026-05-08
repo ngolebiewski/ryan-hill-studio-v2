@@ -41,13 +41,13 @@ useHead({
   title: computed(() => {
     if (!artwork.value) return 'Studio';
     return artwork.value.year
-      ? `${artwork.value.title} (${artwork.value.year}) | Nick Golebiewski`
-      : `${artwork.value.title} | Nick Golebiewski`;
+      ? `${artwork.value.title} (${artwork.value.year}) | Ryan Hill Studio`
+      : `${artwork.value.title} | Ryan Hill Studio`;
   }),
   meta: [
     {
       name: "description",
-      content: computed(() => artwork.value?.description || `Artwork by Nick Golebiewski`)
+      content: computed(() => artwork.value?.description || `Artwork by Ryan Hill`)
     },
     {
       property: "og:title",
