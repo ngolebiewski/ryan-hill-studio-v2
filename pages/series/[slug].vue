@@ -6,6 +6,7 @@ const md = new MarkdownIt()
 const activeVideoId = ref(null)
 const imageAspectRatios = ref({}) // Track aspect ratios
 const imageLoadingStates = ref({}) // Track which images have loaded
+const imageErrorStates = ref({}) // Track image load errors
 
 const { data, error, pending } = await useFetch(`/api/series/${route.params.slug}`, {
   key: `series-${route.params.slug}`
@@ -37,6 +38,10 @@ const isImageLoaded = (artId) => {
   return imageLoadingStates.value[artId] === true
 }
 
+const isImageError = (artId) => {
+  return imageErrorStates.value[artId] === true
+}
+
 const onVideoLoadedMetadata = (event, artId) => {
   const video = event.target
   if (video.videoWidth && video.videoHeight) {
@@ -50,6 +55,13 @@ const onImageLoad = (event, artId) => {
     imageAspectRatios.value[artId] = img.naturalWidth / img.naturalHeight
   }
   // Mark image as loaded
+  imageLoadingStates.value[artId] = true
+}
+
+const onImageError = (artId) => {
+  // Mark image as errored
+  imageErrorStates.value[artId] = true
+  // Stop showing skeleton
   imageLoadingStates.value[artId] = true
 }
 
@@ -110,18 +122,21 @@ useHead({
             <!-- IMAGE VIEW -->
             <div v-else class="relative w-full h-full flex items-center">
               
-              <!-- Skeleton Placeholder - Light Grey Option -->
-              <!-- <div v-if="!isImageLoaded(art.id)" 
-                   class="absolute inset-0 bg-gradient-to-br from-zinc-100 to-zinc-200 animate-pulse flex items-center justify-center">
-                <svg class="w-8 h-8 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div> -->
-
-              <!-- Alternative Skeleton Placeholder - Minimal Background Only -->
-              <!-- Uncomment this section and comment out the above to use the minimal variant -->
+              <!-- Skeleton Placeholder - Minimal Background Only -->
               <div v-if="!isImageLoaded(art.id)" 
                    class="absolute inset-0 bg-zinc-50 animate-pulse">
+              </div>
+
+              <!-- Error State - Show Alt Text -->
+              <div v-else-if="isImageError(art.id)"
+                   class="absolute inset-0 bg-zinc-50 flex items-center justify-center px-6">
+                <div class="text-center">
+                  <!-- <svg class="w-8 h-8 text-zinc-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 0v2m0-6v-2m0 0V7a2 2 0 012-2h2.586a1 1 0 00-.707-1.707h-.879a3 3 0 00-3 3v2H9a1 1 0 000 2h3v4h-3a1 1 0 000 2h3v2a3 3 0 003 3h.879a1 1 0 00.707-1.707H14a2 2 0 01-2-2v-2m0 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg> -->
+                  <p class="text-xs uppercase tracking-widest text-zinc-400 font-medium">{{ art.title }}</p>
+                  <p class="text-[10px] text-zinc-300 mt-1">Image unavailable</p>
+                </div>
               </div>
 
               <!-- Image -->
@@ -133,6 +148,7 @@ useHead({
                   :class="{ 'opacity-0': !isImageLoaded(art.id) }"
                   :alt="art.title"
                   @load="onImageLoad($event, art.id)"
+                  @error="onImageError(art.id)"
                 />
               </NuxtLink>
 
@@ -144,8 +160,9 @@ useHead({
                   :class="{ 'opacity-0': !isImageLoaded(art.id) }"
                   :alt="art.title"
                   @load="onImageLoad($event, art.id)"
+                  @error="onImageError(art.id)"
                 />
-                <div @click="togglePlay(art.id)" class="absolute inset-0 flex items-center justify-center cursor-pointer group-hover:bg-black/5 transition-colors z-20" :class="{ 'pointer-events-none': !isImageLoaded(art.id) }">
+                <div @click="togglePlay(art.id)" class="absolute inset-0 flex items-center justify-center cursor-pointer group-hover:bg-black/5 transition-colors z-20" :class="{ 'pointer-events-none': !isImageLoaded(art.id) || isImageError(art.id) }">
                    <div class="w-14 h-14 md:w-16 md:h-16 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center border border-zinc-200 shadow-xl hover:scale-110 transition-transform">
                      <svg viewBox="0 0 24 24" class="w-6 h-6 ml-1 fill-current text-black"><path d="M8 5v14l11-7z" /></svg>
                    </div>
