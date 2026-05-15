@@ -4,7 +4,8 @@ import MarkdownIt from 'markdown-it'
 const route = useRoute()
 const md = new MarkdownIt()
 const activeVideoId = ref(null)
-const videoAspectRatios = ref({}) // Track aspect ratios
+const imageAspectRatios = ref({}) // Track aspect ratios
+const imageLoadingStates = ref({}) // Track which images have loaded
 
 const { data, error, pending } = await useFetch(`/api/series/${route.params.slug}`, {
   key: `series-${route.params.slug}`
@@ -29,21 +30,27 @@ const getEmbedUrl = (url) => {
 
 const getAspectRatio = (art) => {
   // Return stored ratio or default to 16/9 (horizontal)
-  return videoAspectRatios.value[art.id] || 16 / 9
+  return imageAspectRatios.value[art.id] || 16 / 9
+}
+
+const isImageLoaded = (artId) => {
+  return imageLoadingStates.value[artId] === true
 }
 
 const onVideoLoadedMetadata = (event, artId) => {
   const video = event.target
   if (video.videoWidth && video.videoHeight) {
-    videoAspectRatios.value[artId] = video.videoWidth / video.videoHeight
+    imageAspectRatios.value[artId] = video.videoWidth / video.videoHeight
   }
 }
 
 const onImageLoad = (event, artId) => {
   const img = event.target
   if (img.naturalWidth && img.naturalHeight) {
-    videoAspectRatios.value[artId] = img.naturalWidth / img.naturalHeight
+    imageAspectRatios.value[artId] = img.naturalWidth / img.naturalHeight
   }
+  // Mark image as loaded
+  imageLoadingStates.value[artId] = true
 }
 
 const togglePlay = (id) => {
@@ -75,9 +82,11 @@ useHead({
         <div v-for="art in sortedArtworks" :key="art.id" 
              class="flex-shrink-0 md:snap-center w-full md:w-auto relative group mb-16 md:mb-0">
           
-          <div class="relative w-full md:h-[75vh] flex items-center bg-zinc-50 overflow-hidden"
+          <!-- Image Container with Skeleton Placeholder -->
+          <div class="relative w-full md:h-[75vh] flex items-center overflow-hidden"
                :style="{ aspectRatio: getAspectRatio(art) }">
             
+            <!-- VIDEO VIEW -->
             <div v-if="activeVideoId === art.id" class="w-full h-full flex items-center justify-center bg-black"
                  :style="{ aspectRatio: getAspectRatio(art) }">
               <iframe 
@@ -98,11 +107,30 @@ useHead({
               <button @click="togglePlay(null)" class="absolute top-2 right-2 z-30 bg-black text-white p-2 text-[8px] uppercase">Close ×</button>
             </div>
 
+            <!-- IMAGE VIEW -->
             <div v-else class="relative w-full h-full flex items-center">
-              <NuxtLink v-if="!art.is_video" :to="`/artwork/${art.slug}`" class="w-full h-full block">
+              
+              <!-- Skeleton Placeholder - Light Grey Option -->
+              <!-- <div v-if="!isImageLoaded(art.id)" 
+                   class="absolute inset-0 bg-gradient-to-br from-zinc-100 to-zinc-200 animate-pulse flex items-center justify-center">
+                <svg class="w-8 h-8 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div> -->
+
+              <!-- Alternative Skeleton Placeholder - Minimal Background Only -->
+              <!-- Uncomment this section and comment out the above to use the minimal variant -->
+              <div v-if="!isImageLoaded(art.id)" 
+                   class="absolute inset-0 bg-zinc-50 animate-pulse">
+              </div>
+
+              <!-- Image -->
+              <NuxtLink v-if="!art.is_video" :to="`/artwork/${art.slug}`" class="w-full h-full block relative z-10">
                 <img 
                   :src="art.image_url" 
-                  class="w-full md:h-full md:w-auto object-contain cursor-pointer" 
+                  :loading="'lazy'"
+                  class="w-full md:h-full md:w-auto object-contain cursor-pointer transition-opacity duration-300"
+                  :class="{ 'opacity-0': !isImageLoaded(art.id) }"
                   :alt="art.title"
                   @load="onImageLoad($event, art.id)"
                 />
@@ -111,11 +139,13 @@ useHead({
               <template v-else>
                 <img 
                   :src="art.image_url" 
-                  class="w-full md:h-full md:w-auto object-contain" 
+                  :loading="'lazy'"
+                  class="w-full md:h-full md:w-auto object-contain transition-opacity duration-300"
+                  :class="{ 'opacity-0': !isImageLoaded(art.id) }"
                   :alt="art.title"
                   @load="onImageLoad($event, art.id)"
                 />
-                <div @click="togglePlay(art.id)" class="absolute inset-0 flex items-center justify-center cursor-pointer group-hover:bg-black/5 transition-colors">
+                <div @click="togglePlay(art.id)" class="absolute inset-0 flex items-center justify-center cursor-pointer group-hover:bg-black/5 transition-colors z-20" :class="{ 'pointer-events-none': !isImageLoaded(art.id) }">
                    <div class="w-14 h-14 md:w-16 md:h-16 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center border border-zinc-200 shadow-xl hover:scale-110 transition-transform">
                      <svg viewBox="0 0 24 24" class="w-6 h-6 ml-1 fill-current text-black"><path d="M8 5v14l11-7z" /></svg>
                    </div>
@@ -124,6 +154,7 @@ useHead({
             </div>
           </div>
 
+          <!-- Artwork Title -->
           <NuxtLink :to="`/artwork/${art.slug}`" class="block mt-4 hover:text-black transition-colors">
             <p class="text-[10px] uppercase tracking-widest text-zinc-400">
               {{ art.title }} <span v-if="art.year" class="opacity-50">({{ art.year }})</span>

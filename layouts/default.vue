@@ -128,7 +128,7 @@ onBeforeUnmount(() => {
       </transition>
     </header>
 
-    <main class="px-6 md:px-12 pb-24">x
+    <main class="px-6 md:px-12 pb-24">
       <slot />
     </main>
   </div>
