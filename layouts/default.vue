@@ -20,6 +20,26 @@ const navTree = computed(() => {
 watch(() => route.fullPath, () => {
   isMenuOpen.value = false
 })
+
+// Lock/unlock body scroll when menu opens/closes
+watch(isMenuOpen, (newValue) => {
+  if (process.client) {
+    if (newValue) {
+      // Lock scroll
+      document.body.style.overflow = 'hidden'
+    } else {
+      // Unlock scroll
+      document.body.style.overflow = ''
+    }
+  }
+})
+
+// Cleanup on component unmount
+onBeforeUnmount(() => {
+  if (process.client) {
+    document.body.style.overflow = ''
+  }
+})
 </script>
 
 <template>
@@ -92,7 +112,7 @@ watch(() => route.fullPath, () => {
         leave-from-class="opacity-100 translate-y-0" 
         leave-to-class="opacity-0 -translate-y-4"
       >
-        <nav v-if="isMenuOpen" class="md:hidden flex flex-col gap-8 pt-12 pb-10 text-[11px] uppercase tracking-[0.3em] font-medium">
+        <nav v-if="isMenuOpen" class="md:hidden flex flex-col gap-8 pt-12 pb-10 text-[11px] uppercase tracking-[0.3em] font-medium max-h-[calc(100vh-120px)] overflow-y-auto">
           <div v-for="item in navTree" :key="item.id" class="flex flex-col gap-4">
             <NuxtLink :to="`/series/${item.slug}`" class="text-zinc-900">{{ item.title }}</NuxtLink>
             <div v-if="item.children.length" class="pl-4 flex flex-col gap-4 border-l border-zinc-100">
@@ -108,7 +128,7 @@ watch(() => route.fullPath, () => {
       </transition>
     </header>
 
-    <main class="px-6 md:px-12 pb-24">
+    <main class="px-6 md:px-12 pb-24">x
       <slot />
     </main>
   </div>
