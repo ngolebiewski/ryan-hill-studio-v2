@@ -288,7 +288,7 @@ const deleteArtwork = async (id) => {
                 <input
                   type="file"
                   ref="videoFileInput"
-                  accept="video/mp4"
+                  accept="video/mp4,video/quicktime,.mov"
                   class="text-[9px] w-full"
                 />
               </div>
