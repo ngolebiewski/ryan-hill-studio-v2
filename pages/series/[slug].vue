@@ -19,11 +19,21 @@ const renderedDescription = computed(() => {
   return data.value?.series?.description ? md.render(data.value.series.description) : ''
 })
 
-const getEmbedUrl = (url) => {
+const getYouTubeId = (url) => {
   if (!url) return ''
-  let id = ''
-  if (url.includes('v=')) id = url.split('v=')[1].split('&')[0]
-  else if (url.includes('youtu.be/')) id = url.split('youtu.be/')[1]
+
+  const match = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/
+  )
+
+  return match ? match[1] : ''
+}
+
+const getEmbedUrl = (url) => {
+  const id = getYouTubeId(url)
+
+  if (!id) return ''
+
   return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`
 }
 
