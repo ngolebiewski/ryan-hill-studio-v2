@@ -28,23 +28,30 @@ watch(
   async (newUrl) => {
     if (!newUrl || !newArtwork.value.is_video) return;
 
-    // 1. Extract ID (handles watch?v=, youtu.be/, and ?si= tracking)
-    const regExp =
-      /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-    const match = newUrl.match(regExp);
-    const videoId = match && match[2].length === 11 ? match[2] : null;
+    // Handles:
+    // - youtube.com/watch?v=
+    // - youtu.be/
+    // - youtube.com/shorts/
+    // - youtube.com/embed/
+    // - extra params like ?si=
+    const match = newUrl.match(
+      /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{11})/,
+    );
+
+    const videoId = match ? match[1] : null;
 
     if (videoId) {
-      // 2. Set the standard quality thumbnail automatically
-      newArtwork.value.image_url = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+      // Auto thumbnail
+      newArtwork.value.image_url =
+        `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 
-      // 3. Try to fetch the video title via YouTube's public oEmbed
-      // This helps bypass the "missing title" error automatically
+      // Auto title via YouTube oEmbed
       try {
         const oEmbed = await $fetch(
           `https://www.youtube.com/oembed?url=${encodeURIComponent(newUrl)}&format=json`,
         );
-        if (oEmbed && oEmbed.title && !newArtwork.value.title) {
+
+        if (oEmbed?.title && !newArtwork.value.title) {
           newArtwork.value.title = oEmbed.title;
         }
       } catch (e) {
@@ -122,20 +129,22 @@ const uploadArtwork = async () => {
   fd.append("image_url", newArtwork.value.image_url || "");
 
   try {
-    const url = isEditing.value ? `/api/artworks/${newArtwork.value.id}` : '/api/artworks/create'
-    const method = isEditing.value ? 'PATCH' : 'POST'
-    
+    const url = isEditing.value
+      ? `/api/artworks/${newArtwork.value.id}`
+      : "/api/artworks/create";
+    const method = isEditing.value ? "PATCH" : "POST";
+
     // Use $fetch which automatically sends cookies if credentials are enabled
-    await $fetch(url, { 
-      method, 
+    await $fetch(url, {
+      method,
       body: fd,
-      credentials: 'include'  // <-- Add this line
-    })
-    await refresh()
-    resetForm()
+      credentials: "include", // <-- Add this line
+    });
+    await refresh();
+    resetForm();
   } catch (err) {
-    console.error("Upload failed:", err)
-    alert("Upload failed. Check terminal for server logs.")
+    console.error("Upload failed:", err);
+    alert("Upload failed. Check terminal for server logs.");
   }
 };
 
@@ -288,7 +297,7 @@ const deleteArtwork = async (id) => {
                 <input
                   type="file"
                   ref="videoFileInput"
-                  accept="video/mp4"
+                  accept="video/mp4,video/quicktime,.mov"
                   class="text-[9px] w-full"
                 />
               </div>
