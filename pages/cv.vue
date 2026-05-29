@@ -17,7 +17,8 @@ useHead({
     <div v-if="page">
       <div class="flex justify-between items-baseline mb-16">
         <h1 class="text-xl font-light tracking-[0.2em] uppercase">Curriculum Vitae</h1>
-        <a href="/ryan-hill-cv.pdf" class="text-[10px] uppercase tracking-widest hover:underline text-zinc-400">Download PDF</a>
+        <!-- See Issue #33: Implement PDF tool to parse markdown for CV into real up to date PDF. DO NOT JUST MAKE A PDF BY HAND AND UPLOAD -->
+        <!-- <a href="/ryan-hill-cv.pdf" class="text-[10px] uppercase tracking-widest hover:underline text-zinc-400">Download PDF</a> -->
       </div>
 
       <div 
