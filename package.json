@@ -7,7 +7,8 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "test:videos": "npx playwright test tests/youtube-monitor.spec.js"
   },
   "dependencies": {
     "@netlify/blobs": "^10.7.4",
@@ -26,6 +27,7 @@
     "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@types/node": "^25.5.2",
     "@types/pg": "^8.20.0"
   }
