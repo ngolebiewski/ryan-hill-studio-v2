@@ -360,12 +360,17 @@ const deleteArtwork = async (id) => {
             'ring-2 ring-black ring-offset-2 z-10': newArtwork.id === art.id,
           }"
         >
-          <img
+          <!-- <img :src="art.image_url" :alt="art.alt_text" class="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-500" /> -->
+          <NuxtImg
             :src="art.image_url"
+            width="200"
+            height="200"
+            format="webp"
+            quality="60"
             :alt="art.alt_text"
-            class="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-500"
+            class="object-cover w-full h-full grayscale hover:grayscale-0"
           />
-
+          <!--  -->
           <div
             v-if="art.is_video"
             class="absolute top-2 right-2 bg-white/90 p-1 rounded-sm shadow-sm"

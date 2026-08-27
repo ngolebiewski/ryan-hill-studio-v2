@@ -12,6 +12,7 @@
   "dependencies": {
     "@netlify/blobs": "^10.7.4",
     "@netlify/neon": "^0.1.2",
+    "@nuxt/image": "^2.0.0",
     "@nuxthq/ui": "^2.7.0",
     "@nuxtjs/tailwindcss": "^6.14.0",
     "@pinia/nuxt": "^0.11.3",
