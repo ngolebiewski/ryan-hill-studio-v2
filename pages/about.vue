@@ -38,6 +38,6 @@ useHead({
 }
 
 .markdown-content img {
-  @apply w-full h-auto my-12 object-cover;
+  @apply w-full h-auto mt-12 mb-2 object-cover;
 }
 </style>
